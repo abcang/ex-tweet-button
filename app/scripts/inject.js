@@ -1,24 +1,31 @@
-'use strict';
-
-const $ = require('jquery');
-
-// iframe
 (() => {
-  const ele = $('#widget a')[0]
-  if (ele) {
-    const url = ele.getAttribute('href');
-    chrome.runtime.sendMessage({url});
+  'use strict';
+  const $ = require('jquery');
+
+  const pattern = [
+    'a[href*="//twitter.com/intent/tweet"][href*="url="]', // now
+    'a[href*="//twitter.com/share"][href*="url="]', // old
+    'a[href*="twitter.com"][href*="intent"][href*="url"]' // amazon
+  ];
+  const ele = pattern.reduce((element, pat) => {
+    return element || $(pat)[0];
+  }, null);
+
+  if (!ele) {
+    return;
   }
-})();
 
-// direct or amazon
-(() => {
-  const ele = $('[href*="twitter.com"][href*="intent"][href*="tweet"][href*="url"]')[0];
-  if (ele) {
-    let url = ele.getAttribute('href');
-    if (!url.match(/^http/)) {
-      url = `${location.protocol}//${location.host}${(url[0] == '/' ? '' : '/')}${url}`;
+  const url = ((href) => {
+    if (href.startsWith('//')) {
+      return `${location.protocol}${href}`;
+    } else if (href.startsWith('/')) {
+      return `${location.protocol}//${location.host}${href}`;
+    } else {
+      return href;
     }
+  })(ele.getAttribute('href'));
+
+  if (url) {
     chrome.runtime.sendMessage({url});
   }
 })();
