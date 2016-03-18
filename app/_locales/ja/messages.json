@@ -1,0 +1,18 @@
+{
+  "appName": {
+    "message": "ExTweetButton",
+    "description": "The name of the application"
+  },
+  "appShortName": {
+    "message": "ExTweetButton",
+    "description": "The short_name (maximum of 12 characters recommended) is a short version of the app's name."
+  },
+  "appDescription": {
+    "message": "ページ内のTweetButtonを使ってツイートします。いちいちボタンを探す必要はありません。",
+    "description": "The description of the application"
+  },
+  "browserActionTitle": {
+    "message": "ExTweetButton",
+    "description": "The description of the application"
+  }
+}
