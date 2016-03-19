@@ -1,14 +1,12 @@
 (() => {
   'use strict';
-  const $ = require('jquery');
-
   const pattern = [
     'a[href*="//twitter.com/intent/tweet"][href*="url="]', // now
     'a[href*="//twitter.com/share"][href*="url="]', // old
     'a[href*="twitter.com"][href*="intent"][href*="url"]' // amazon
   ];
   const ele = pattern.reduce((element, pat) => {
-    return element || $(pat)[0];
+    return element || document.querySelector(pat);
   }, null);
 
   if (!ele) {
