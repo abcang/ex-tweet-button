@@ -3,6 +3,8 @@
 // Enable chromereload by uncommenting this line:
 //require('./lib/livereload');
 
+const URL = require('url');
+
 (() => {
   class Background {
     constructor() {
@@ -18,8 +20,9 @@
     }
 
     onClicked(tab) {
-      this.tabs.set(tab.id, true);
       if (!tab.url.startsWith('chrome:')) {
+        const parsed = URL.parse(tab.url);
+        this.tabs.set(tab.id, parsed.href.replace((parsed.search || '') + (parsed.hash || ''), ''));
         chrome.tabs.executeScript(null, {file: 'scripts/inject.js', allFrames: true}, () => {
           const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tab.title)}&url=${encodeURIComponent(tab.url)}`;
           this.openTweetWindow(url, tab);
@@ -28,9 +31,27 @@
     }
 
     openTweetWindow(url, tab) {
-      if (this.tabs.has(tab.id)) {
-        this.tabs.delete(tab.id);
+      if (this.checkIdAndURL(tab.id, url)) {
         this.openWindow(url);
+      }
+    }
+
+    checkIdAndURL(id, url) {
+      if (this.tabs.has(id)) {
+        const parsed = URL.parse(url, true);
+
+        if (parsed.query.url && parsed.query.url.startsWith(this.tabs.get(id))) {
+          this.tabs.delete(id);
+          return true;
+        }
+
+        //amazonはとりあえず許可
+        if (parsed.query.location) {
+          this.tabs.delete(id);
+          return true;
+        }
+      } else {
+        return false
       }
     }
 

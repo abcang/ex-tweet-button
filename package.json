@@ -1,7 +1,7 @@
 {
   "name": "extweetbutton",
   "private": true,
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "tweetbutton",
   "scripts": {
     "build:chrome": "gulp --production --vendor=chrome && gulp pack --vendor=chrome",
@@ -39,6 +39,7 @@
     "gulp-util": "^3.0.5",
     "gulp-zip": "^3.0.2",
     "require-dir": "^0.3.0",
+    "url": "^0.11.0",
     "vinyl-named": "^1.1.0",
     "webpack": "^1.11.0",
     "webpack-stream": "^2.1.0",
