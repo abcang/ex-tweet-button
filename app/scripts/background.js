@@ -40,13 +40,15 @@ const URL = require('url');
       if (this.tabs.has(id)) {
         const parsed = URL.parse(url, true);
 
-        if (parsed.query.url && parsed.query.url.startsWith(this.tabs.get(id))) {
+        // 開いているページのURLから始まる or URLの最後が一致
+        if (parsed.query.url && (parsed.query.url.startsWith(this.tabs.get(id)) ||
+            parsed.query.url.match(/([^\/]+)\/?$/)[1] === this.tabs.get(id).match(/([^\/]+)\/?$/)[1])) {
           this.tabs.delete(id);
           return true;
         }
 
         //amazonはとりあえず許可
-        if (parsed.query.location) {
+        if (parsed.host === 'www.amazon.co.jp' && parsed.query.location) {
           this.tabs.delete(id);
           return true;
         }
