@@ -1,15 +1,22 @@
 (() => {
   'use strict';
-  const pattern = [
-    'a[href*="//twitter.com/intent/tweet"][href*="url="]', // now
-    'a[href*="//twitter.com/share"][href*="url="]', // old
-    'a[href*="twitter.com"][href*="intent"][href*="url"]' // amazon
-  ];
-  const ele = pattern.reduce((element, pat) => {
-    return element || document.querySelector(pat);
-  }, null);
+  const pattern = {
+    new: 'a[href*="//twitter.com/intent/tweet"][href*="url="]',
+    old: 'a[href*="//twitter.com/share"][href*="url="]',
+    amazon: 'a[href*="twitter.com"][href*="intent"][href*="url"]',
+    jetpack: 'a.share-twitter[href*="share=twitter"]'
+  };
+  const {type, element} = (() => {
+    for (const type in pattern) {
+      const element = document.querySelector(pattern[type]);
+      if (element) {
+        return {type, element};
+      }
+    }
+    return {};
+  })();
 
-  if (!ele) {
+  if (!element) {
     return;
   }
 
@@ -21,9 +28,9 @@
     } else {
       return href;
     }
-  })(ele.getAttribute('href'));
+  })(element.getAttribute('href'));
 
   if (url) {
-    chrome.runtime.sendMessage({url});
+    chrome.runtime.sendMessage({type, url});
   }
 })();

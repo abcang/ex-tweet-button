@@ -15,7 +15,7 @@ const URL = require('url');
     addListener() {
       chrome.browserAction.onClicked.addListener((tab) => this.onClicked(tab));
       chrome.runtime.onMessage.addListener((request, sender) => {
-        this.openTweetWindow(request.url, sender.tab);
+        this.openTweetWindow(request, sender.tab);
       });
     }
 
@@ -25,36 +25,37 @@ const URL = require('url');
         this.tabs.set(tab.id, parsed.href.replace((parsed.search || '') + (parsed.hash || ''), ''));
         chrome.tabs.executeScript(null, {file: 'scripts/inject.js', allFrames: true}, () => {
           const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tab.title)}&url=${encodeURIComponent(tab.url)}`;
-          this.openTweetWindow(url, tab);
+          this.openTweetWindow({type: 'default', url}, tab);
         });
       }
     }
 
-    openTweetWindow(url, tab) {
-      if (this.checkIdAndURL(tab.id, url)) {
-        this.openWindow(url);
+    openTweetWindow(request, tab) {
+      if (this.checkIdAndURL(tab.id, request)) {
+        this.openWindow(request.url);
       }
     }
 
-    checkIdAndURL(id, url) {
+    checkIdAndURL(id, request) {
       if (this.tabs.has(id)) {
-        const parsed = URL.parse(url, true);
+        const parsed = URL.parse(request.url, true);
 
-        // 開いているページのURLから始まる or URLの最後が一致
-        if (parsed.query.url && (parsed.query.url.startsWith(this.tabs.get(id)) ||
-            parsed.query.url.match(/([^\/]+)\/?$/)[1] === this.tabs.get(id).match(/([^\/]+)\/?$/)[1])) {
+        if (['default', 'new', 'old'].includes(request.type)) {
+          // 開いているページのURLから始まる or URLの最後が一致(for niconico)
+          if (parsed.query.url && (parsed.query.url.startsWith(this.tabs.get(id)) ||
+              parsed.query.url.match(/([^\/]+)\/?$/)[1] === this.tabs.get(id).match(/([^\/]+)\/?$/)[1])) {
+            this.tabs.delete(id);
+            return true;
+          }
+        }
+
+        //amazonとjetpackはとりあえず許可
+        if (['amazon', 'jetpack'].includes(request.type)) {
           this.tabs.delete(id);
           return true;
         }
-
-        //amazonはとりあえず許可
-        if (parsed.host === 'www.amazon.co.jp' && parsed.query.location) {
-          this.tabs.delete(id);
-          return true;
-        }
-      } else {
-        return false
       }
+      return false
     }
 
     openWindow(url) {
