@@ -1,10 +1,5 @@
 'use strict';
 
-// Enable chromereload by uncommenting this line:
-//require('./lib/livereload');
-
-const URL = require('url');
-
 (() => {
   class Background {
     constructor() {
@@ -21,9 +16,9 @@ const URL = require('url');
 
     onClicked(tab) {
       if (!tab.url.startsWith('chrome:')) {
-        const parsed = URL.parse(tab.url);
+        const parsed = new URL(tab.url);
         this.tabs.set(tab.id, parsed.href.replace((parsed.search || '') + (parsed.hash || ''), ''));
-        chrome.tabs.executeScript(null, {file: 'scripts/inject.js', allFrames: true}, () => {
+        chrome.tabs.executeScript(null, {file: 'inject.js', allFrames: true}, () => {
           const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tab.title)}&url=${encodeURIComponent(tab.url)}`;
           this.openTweetWindow({type: 'default', url}, tab);
         });
@@ -38,12 +33,15 @@ const URL = require('url');
 
     checkIdAndURL(id, request) {
       if (this.tabs.has(id)) {
-        const parsed = URL.parse(request.url, true);
+        console.log(request)
+        const parsed = new URL(request.url);
+        console.log(parsed)
 
         if (['default', 'new', 'old'].includes(request.type)) {
           // 開いているページのURLから始まる or URLの最後が一致(for niconico)
-          if (parsed.query.url && (parsed.query.url.startsWith(this.tabs.get(id)) ||
-              parsed.query.url.match(/([^\/]+)\/?$/)[1] === this.tabs.get(id).match(/([^\/]+)\/?$/)[1])) {
+          const url = parsed.searchParams.get('url')
+          if (url && (url.startsWith(this.tabs.get(id)) ||
+              url.match(/([^/]+)\/?$/)[1] === this.tabs.get(id).match(/([^/]+)\/?$/)[1])) {
             this.tabs.delete(id);
             return true;
           }
@@ -64,7 +62,7 @@ const URL = require('url');
       const x = (screen.width - w) / 2;
       const y = (screen.height - h) / 2;
       window.open(url, null, `left=${x},top=${y},width=${w},height=${h},status=no`);
-    };
+    }
   }
   window.bg = new Background();
 })();

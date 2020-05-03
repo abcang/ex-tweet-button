@@ -1,14 +1,15 @@
+'use strict';
+
 (() => {
-  'use strict';
-  const pattern = {
+  const patterns = {
     new: 'a[href*="//twitter.com/intent/tweet"][href*="url="]',
     old: 'a[href*="//twitter.com/share"][href*="url="]',
     amazon: 'a[href*="twitter.com"][href*="intent"][href*="url"]',
     jetpack: 'a.share-twitter[href*="share=twitter"]'
   };
   const {type, element} = (() => {
-    for (const type in pattern) {
-      const element = document.querySelector(pattern[type]);
+    for (const [type, selector] of Object.entries(patterns)) {
+      const element = document.querySelector(selector);
       if (element) {
         return {type, element};
       }
