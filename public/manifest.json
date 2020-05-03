@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "ExTweetButton",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "ページ内のTweetButtonを使ってツイートします。いちいちボタンを探す必要はありません。",
   "icons": {
     "16": "icons/icon_16.png",
@@ -20,8 +20,6 @@
     }
   },
   "permissions": [
-    "tabs",
-    "http://*/*",
-    "https://*/*"
+    "activeTab"
   ]
 }
