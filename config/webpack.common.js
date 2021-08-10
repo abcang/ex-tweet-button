@@ -15,6 +15,7 @@ const common = {
     path: PATHS.build,
     // the filename template for entry chunks
     filename: '[name].js',
+    assetModuleFilename: "images/[name][ext]",
   },
   devtool: 'source-map',
   stats: {
@@ -27,15 +28,7 @@ const common = {
       // Check for images imported in .js files and
       {
         test: /\.(png|jpe?g|gif)$/i,
-        use: [
-          {
-            loader: 'file-loader',
-            options: {
-              outputPath: 'images',
-              name: '[name].[ext]',
-            },
-          },
-        ],
+        type: "asset/resource",
       },
     ],
   },
@@ -43,12 +36,14 @@ const common = {
     // Print file sizes
     new SizePlugin(),
     // Copy static assets from `public` folder to `build` folder
-    new CopyWebpackPlugin([
-      {
-        from: '**/*',
-        context: 'public',
-      },
-    ]),
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: '**/*',
+          context: 'public',
+        },
+      ],
+    }),
   ],
 };
 
