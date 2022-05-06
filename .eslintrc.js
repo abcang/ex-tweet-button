@@ -1,12 +1,24 @@
 module.exports = {
-  "root": true,
-  "extends": "eslint:recommended",
-  "env": {
-    "browser": true,
-    "es2018": true,
-    "node": true,
+  root: true,
+  parser: "@typescript-eslint/parser",
+  parserOptions: {
+    project: "./tsconfig.json",
   },
-  "globals": {
-    "chrome": true,
+  extends: [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended-requiring-type-checking",
+    "plugin:prettier/recommended",
+    "prettier",
+  ],
+  plugins: ["@typescript-eslint"],
+  rules: {},
+  env: {
+    browser: true,
+    es6: true,
+    node: true,
   },
-}
+  globals: {
+    chrome: true,
+  },
+};

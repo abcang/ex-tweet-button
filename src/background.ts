@@ -2,7 +2,7 @@
 
 (() => {
   async function sleep(ms: number) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       setTimeout(resolve, ms);
     });
   }
@@ -41,14 +41,14 @@
 
       //amazonとjetpackはとりあえず許可
       if (["amazon", "jetpack"].includes(type)) {
-        chrome.runtime.sendMessage({ type, url });
+        void chrome.runtime.sendMessage({ type, url });
         return;
       }
 
       const parsed = new URL(url);
       const linkUrl = parsed.searchParams.get("url");
       if (linkUrl && linkUrl.startsWith(baseUrl)) {
-        chrome.runtime.sendMessage({ type, url });
+        void chrome.runtime.sendMessage({ type, url });
       }
     }
   }
@@ -70,20 +70,22 @@
 
     constructor() {
       this.tabs = new Map();
-      chrome.action.onClicked.addListener((tab) => this.onClicked(tab));
-      chrome.runtime.onMessage.addListener(({ type, url }, sender) => {
-        console.log({ type, url });
+      chrome.action.onClicked.addListener((tab) => void this.onClicked(tab));
+      chrome.runtime.onMessage.addListener(
+        ({ type, url }: { type: string; url: string }, sender) => {
+          console.log({ type, url });
 
-        const tabId = sender.tab?.id;
-        if (tabId !== undefined) {
-          const candidates = this.tabs.get(tabId);
-          if (candidates) {
-            candidates.push(url);
+          const tabId = sender.tab?.id;
+          if (tabId !== undefined) {
+            const candidates = this.tabs.get(tabId);
+            if (candidates) {
+              candidates.push(url);
+            }
           }
-        }
 
-        return true;
-      });
+          return true;
+        }
+      );
     }
 
     async onClicked(tab: chrome.tabs.Tab) {
@@ -105,7 +107,7 @@
       );
 
       // promiseが返ってこないiframeが存在するのでonMessage経由で処理をする
-      chrome.scripting.executeScript({
+      void chrome.scripting.executeScript({
         target: { tabId, allFrames: true },
         func: extractUrl,
         args: [baseUrl],
