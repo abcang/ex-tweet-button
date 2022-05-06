@@ -1,68 +1,116 @@
 'use strict';
 
 (() => {
+  async function sleep(ms) {
+    return new Promise((resolve, reject) => {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  function extractUrl(baseUrl) {
+    const patterns = {
+      new: 'a[href*="//twitter.com/intent/tweet"][href*="url="]',
+      old: 'a[href*="//twitter.com/share"][href*="url="]',
+      amazon: 'a[href*="twitter.com"][href*="intent"][href*="url"]',
+      jetpack: 'a.share-twitter[href*="share=twitter"]'
+    };
+
+    for (const [type, selector] of Object.entries(patterns)) {
+      const element = document.querySelector(selector);
+      if (!element) {
+        continue;
+      }
+
+      const url = ((href) => {
+        if (href.startsWith('//')) {
+          return `${location.protocol}${href}`;
+        } else if (href.startsWith('/')) {
+          return `${location.protocol}//${location.host}${href}`;
+        } else {
+          return href;
+        }
+      })(element.getAttribute('href'));
+
+      if (!url) {
+        continue;
+      }
+
+      //amazonとjetpackはとりあえず許可
+      if (['amazon', 'jetpack'].includes(type)) {
+        chrome.runtime.sendMessage({type, url})
+        return;
+      }
+
+      const parsed = new URL(url);
+      const linkUrl = parsed.searchParams.get('url');
+      if (linkUrl && linkUrl.startsWith(baseUrl)) {
+        chrome.runtime.sendMessage({type, url});
+      }
+    }
+  }
+
+  function openWindow(url) {
+    const w = 640;
+    const h = 360;
+    const x = (window.screen.width - w) / 2;
+    const y = (window.screen.height - h) / 2;
+    window.open(url, null, `left=${x},top=${y},width=${w},height=${h},status=no`);
+  }
+
   class Background {
     constructor() {
-      this.addListener();
       this.tabs = new Map();
-    }
-
-    addListener() {
-      chrome.browserAction.onClicked.addListener((tab) => this.onClicked(tab));
-      chrome.runtime.onMessage.addListener((request, sender) => {
-        this.openTweetWindow(request, sender.tab);
+      chrome.action.onClicked.addListener((tab) => this.onClicked(tab));
+      chrome.runtime.onMessage.addListener(({type, url}, sender) => {
+        console.log({type, url});
+        const candidates = this.tabs.get(sender.tab.id);
+        if (candidates) {
+          candidates.push(url);
+        }
+        return true;
       });
     }
 
-    onClicked(tab) {
-      if (!tab.url.startsWith('chrome:')) {
-        const parsed = new URL(tab.url);
-        this.tabs.set(tab.id, parsed.href.replace((parsed.search || '') + (parsed.hash || ''), ''));
-        chrome.tabs.executeScript(null, {file: 'inject.js', allFrames: true}, () => {
-          const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tab.title)}&url=${encodeURIComponent(tab.url)}`;
-          this.openTweetWindow({type: 'default', url}, tab);
-        });
+    async onClicked(tab) {
+      if (tab.url.startsWith('chrome:')) {
+        return;
       }
+
+      const candidates = [];
+      this.tabs.set(tab.id, candidates);
+
+      const parsed = new URL(tab.url);
+      const baseUrl = parsed.href.replace((parsed.search || '') + (parsed.hash || ''), '');
+
+      // promiseが返ってこないiframeが存在するのでonMessage経由で処理をする
+      chrome.scripting.executeScript({
+        target: {tabId: tab.id, allFrames: true},
+        func: extractUrl,
+        args: [baseUrl]
+      });
+
+      await sleep(500)
+
+      this.tabs.delete(tab.id);
+
+      if (candidates.length === 0) {
+        const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tab.title)}&url=${encodeURIComponent(tab.url)}`;
+        this.openWindow(tab, url);
+        return;
+      }
+
+      // 詳細な情報を含んでいるのはURLが長い方と判断
+      candidates.sort((a, b) => b.length - a.length)
+      this.openWindow(tab, candidates[0]);
     }
 
-    openTweetWindow(request, tab) {
-      if (this.checkIdAndURL(tab.id, request)) {
-        this.openWindow(request.url);
-      }
-    }
-
-    checkIdAndURL(id, request) {
-      if (this.tabs.has(id)) {
-        console.log(request)
-        const parsed = new URL(request.url);
-        console.log(parsed)
-
-        if (['default', 'new', 'old'].includes(request.type)) {
-          // 開いているページのURLから始まる or URLの最後が一致(for niconico)
-          const url = parsed.searchParams.get('url')
-          if (url && (url.startsWith(this.tabs.get(id)) ||
-              url.match(/([^/]+)\/?$/)[1] === this.tabs.get(id).match(/([^/]+)\/?$/)[1])) {
-            this.tabs.delete(id);
-            return true;
-          }
-        }
-
-        //amazonとjetpackはとりあえず許可
-        if (['amazon', 'jetpack'].includes(request.type)) {
-          this.tabs.delete(id);
-          return true;
-        }
-      }
-      return false
-    }
-
-    openWindow(url) {
-      const w = 640;
-      const h = 360;
-      const x = (screen.width - w) / 2;
-      const y = (screen.height - h) / 2;
-      window.open(url, null, `left=${x},top=${y},width=${w},height=${h},status=no`);
+    openWindow(tab, url) {
+      void chrome.scripting.executeScript({
+        target: {tabId: tab.id},
+        args: [url],
+        func: openWindow
+      });
     }
   }
-  window.bg = new Background();
+  new Background();
 })();
