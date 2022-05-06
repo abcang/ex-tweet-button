@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "watch": "webpack --mode=development --watch --config config/webpack.config.js",
-    "build": "webpack --mode=production --config config/webpack.config.js",
+    "build": "rm -rf build && webpack --mode=production --config config/webpack.config.js",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix"
   },
