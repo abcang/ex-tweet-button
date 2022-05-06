@@ -17,7 +17,6 @@ const common = {
     filename: '[name].js',
     assetModuleFilename: "images/[name][ext]",
   },
-  devtool: 'source-map',
   stats: {
     all: false,
     errors: true,
@@ -25,12 +24,21 @@ const common = {
   },
   module: {
     rules: [
+      // Check for TypeScript files
+      {
+        test: /\.ts$/,
+        use: ['ts-loader'],
+      },
       // Check for images imported in .js files and
       {
         test: /\.(png|jpe?g|gif)$/i,
         type: "asset/resource",
       },
     ],
+  },
+  resolve: {
+    // Help webpack resolve these extensions in order
+    extensions: ['.ts', '.js'],
   },
   plugins: [
     // Print file sizes

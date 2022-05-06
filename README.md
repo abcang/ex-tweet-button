@@ -10,3 +10,6 @@
 
 Suggestions and pull requests are welcomed!.
 
+---
+
+This project was bootstrapped with [Chrome Extension CLI](https://github.com/dutiyesh/chrome-extension-cli)
