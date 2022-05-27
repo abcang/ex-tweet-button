@@ -7,11 +7,11 @@
     });
   }
 
-  function extractUrl(baseUrl: string) {
+  function extractUrl(baseOrigin: string) {
     const patterns = {
       new: 'a[href*="//twitter.com/intent/tweet"][href*="url="]',
       old: 'a[href*="//twitter.com/share"][href*="url="]',
-      amazon: 'a[href*="twitter.com"][href*="intent"][href*="url"]',
+      amazon: 'a[href^="/"][href*="twitter.com"][href*="intent"][href*="url"]',
       jetpack: 'a.share-twitter[href*="share=twitter"]',
     };
 
@@ -47,7 +47,7 @@
 
       const parsed = new URL(url);
       const linkUrl = parsed.searchParams.get("url");
-      if (linkUrl && linkUrl.startsWith(baseUrl)) {
+      if (linkUrl && linkUrl.startsWith(baseOrigin)) {
         void chrome.runtime.sendMessage({ type, url });
       }
     }
@@ -101,16 +101,13 @@
       this.tabs.set(tabId, candidates);
 
       const parsed = new URL(tab.url);
-      const baseUrl = parsed.href.replace(
-        (parsed.search || "") + (parsed.hash || ""),
-        ""
-      );
+      const baseOrigin = parsed.origin;
 
       // promiseが返ってこないiframeが存在するのでonMessage経由で処理をする
       void chrome.scripting.executeScript({
         target: { tabId, allFrames: true },
         func: extractUrl,
-        args: [baseUrl],
+        args: [baseOrigin],
       });
 
       await sleep(500);
