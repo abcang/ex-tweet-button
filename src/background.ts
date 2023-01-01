@@ -72,9 +72,7 @@
       this.tabs = new Map();
       chrome.action.onClicked.addListener((tab) => void this.onClicked(tab));
       chrome.runtime.onMessage.addListener(
-        ({ type, url }: { type: string; url: string }, sender) => {
-          console.log({ type, url });
-
+        ({ url }: { type: string; url: string }, sender) => {
           const tabId = sender.tab?.id;
           if (tabId !== undefined) {
             const candidates = this.tabs.get(tabId);
