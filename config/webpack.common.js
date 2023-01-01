@@ -1,9 +1,10 @@
-'use strict';
+"use strict";
 
-const SizePlugin = require('size-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
+/* eslint-disable @typescript-eslint/no-var-requires */
+const SizePlugin = require("size-plugin");
+const CopyWebpackPlugin = require("copy-webpack-plugin");
 
-const PATHS = require('./paths');
+const PATHS = require("./paths");
 
 // To re-use webpack configuration across templates,
 // CLI maintains a common webpack configuration file - `webpack.common.js`.
@@ -14,7 +15,7 @@ const common = {
     // the build folder to output bundles and assets in.
     path: PATHS.build,
     // the filename template for entry chunks
-    filename: '[name].js',
+    filename: "[name].js",
     assetModuleFilename: "images/[name][ext]",
   },
   stats: {
@@ -27,7 +28,7 @@ const common = {
       // Check for TypeScript files
       {
         test: /\.ts$/,
-        use: ['ts-loader'],
+        use: ["ts-loader"],
       },
       // Check for images imported in .js files and
       {
@@ -38,7 +39,7 @@ const common = {
   },
   resolve: {
     // Help webpack resolve these extensions in order
-    extensions: ['.ts', '.js'],
+    extensions: [".ts", ".js"],
   },
   plugins: [
     // Print file sizes
@@ -47,8 +48,8 @@ const common = {
     new CopyWebpackPlugin({
       patterns: [
         {
-          from: '**/*',
-          context: 'public',
+          from: "**/*",
+          context: "public",
         },
       ],
     }),
