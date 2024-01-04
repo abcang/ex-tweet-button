@@ -61,7 +61,7 @@
     window.open(
       url,
       undefined,
-      `left=${x},top=${y},width=${w},height=${h},status=no`
+      `left=${x},top=${y},width=${w},height=${h},status=no`,
     );
   }
 
@@ -82,7 +82,7 @@
           }
 
           return true;
-        }
+        },
       );
     }
 
@@ -114,7 +114,7 @@
 
       if (candidates.length === 0) {
         const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-          tab.title || ""
+          tab.title || "",
         )}&url=${encodeURIComponent(tab.url)}`;
         this.openWindow(tabId, url);
         return;
